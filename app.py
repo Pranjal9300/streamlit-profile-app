@@ -1,100 +1,154 @@
 import streamlit as st
+import json
+import os
 
-# Predefined subjects
-compulsory_subjects = ["Innovation, Entrepreneurship and Start-ups (IES)", "Know yourself (KY)", "Professional Ethics (PE)"]
-general_electives_1 = ["Bibliophiles (Bibl)", "Psychology in Business (PB-A)"]
-general_electives_2 = ["International Business (IB)", "Project Management (PM)", "E-Business (E.Bus)"]
-major_sectors = {
-    "Sales and Marketing": ["Consumer Behaviour (CB)", "Integrated Marketing Communication (IMC)", "Sales & Distribution Management (S&DM)"],
-    "Finance": ["Financial Statement Analysis (FSA)", "Business Valuation (BussV)", "Security and Portfolio Management (SPM)"],
-    "Business Analytics and Operations": ["Programing for Analytics (PA)", "Data Mining and Visualization (DMV)", "AI and Machine Learning (AIML)"],
-    "Media": ["Digital Media (DM)", "Media Production and Consumption (MPC)", "Media Research Tools and Analytics (MRTA)"],
-    "HR": ["Performance Management System (PMS)", "Talent Acquisition (TA)", "Learnings & Development (L&D)"],
-    "Logistics & Supply Chain": ["Purchasing & Inventory Management (P&IM)", "Supply Chain Management (SCM)", "Transportation & Distribution Management (TDM)"]
-}
-additional_subjects = [
-    "Consumer Behaviour (CB)", "Integrated Marketing Communication (IMC)", "Sales & Distribution Management (S&DM)",
-    "Maketing Analytics (Man)", "Strategic Brand Management (SBM)", "Financial Statement Analysis (FSA)",
-    "Business Valuation (BussV)", "Security and Portfolio Management (SPM)", "International Finance (IF)",
-    "Management of Banks (MoB)", "Programing for Analytics (PA)", "Text Mining and Sentiment Analytics (TM&SA)",
-    "Data Mining and Visualization (DMV)", "Analytics for Service Operations (ASO)", "AI and Machine Learning (AIML)",
-    "Digital Media (DM)", "Media Production and Consumption (MPC)", "Media and Sports Industry (MSI)",
-    "Media Research Tools and Analytics (MRTA)", "Media Cost Management & Control (MCMC)", "Performance Management System (PMS)",
-    "Talent Acquisition (TA)", "Learnings & Development (L&D)", "Compensation & Reward Management (C&RM)",
-    "Purchasing & Inventory Management (P&IM)", "Supply Chain Management (SCM)", "Transportation & Distribution Management (TDM)",
-    "Warehousing & Distribution Facilities Management (W&DFM)"
-]
+# File to store user profiles
+PROFILE_STORAGE = "profiles.json"
 
-# Initialize profiles dictionary
-if "profiles" not in st.session_state:
-    st.session_state["profiles"] = {}
+# Load existing profiles
+def load_profiles():
+    if os.path.exists(PROFILE_STORAGE):
+        with open(PROFILE_STORAGE, "r") as file:
+            return json.load(file)
+    return {}
 
-# Sidebar for navigation
-st.sidebar.title("Navigation")
-pages = st.sidebar.radio("Go to", ["Create Profile", "Edit/Delete Profile"])
+# Save profiles
+def save_profiles(profiles):
+    with open(PROFILE_STORAGE, "w") as file:
+        json.dump(profiles, file, indent=4)
 
-if pages == "Create Profile":
-    st.title("Create Profile")
-    name = st.text_input("Enter your name")
-    enrollment_no = st.text_input("Enter your enrollment number")
-    section = st.selectbox("Select your section", ["A", "B", "C"])
+# Main app function
+def main():
+    st.title("Student Profile Management")
 
-    st.subheader("Compulsory Subjects")
-    for subject in compulsory_subjects:
-        st.checkbox(subject, value=True, disabled=True)
+    # Load profiles
+    profiles = load_profiles()
 
-    st.subheader("General Electives 1")
-    elective_1 = st.selectbox("Choose one", general_electives_1)
+    # Menu
+    menu = ["Create Profile", "Edit Profile", "Delete Profile"]
+    choice = st.sidebar.selectbox("Menu", menu)
 
-    st.subheader("General Electives 2")
-    elective_2 = st.selectbox("Choose one", general_electives_2)
-
-    st.subheader("Major Sector")
-    major_sector = st.selectbox("Choose a sector", list(major_sectors.keys()))
-    for subject in major_sectors[major_sector]:
-        st.checkbox(subject, value=True, disabled=True)
-
-    st.subheader("Additional Subject")
-    additional_subject = st.selectbox("Choose one", additional_subjects)
-
-    if st.button("Save Profile"):
-        st.session_state["profiles"][enrollment_no] = {
-            "name": name,
-            "section": section,
-            "elective_1": elective_1,
-            "elective_2": elective_2,
-            "major_sector": major_sector,
-            "additional_subject": additional_subject
-        }
-        st.success("Profile saved successfully!")
-
-elif pages == "Edit/Delete Profile":
-    st.title("Edit or Delete Profile")
-    enrollment_no = st.text_input("Enter your enrollment number to search")
-
-    if enrollment_no in st.session_state["profiles"]:
-        profile = st.session_state["profiles"][enrollment_no]
-        st.write(f"Name: {profile['name']}")
-        st.write(f"Section: {profile['section']}")
-        st.write(f"Elective 1: {profile['elective_1']}")
-        st.write(f"Elective 2: {profile['elective_2']}")
-        st.write(f"Major Sector: {profile['major_sector']}")
-        st.write(f"Additional Subject: {profile['additional_subject']}")
-
-        if st.button("Delete Profile"):
-            del st.session_state["profiles"][enrollment_no]
-            st.success("Profile deleted successfully!")
-
-        if st.button("Edit Profile"):
-            st.session_state["profiles"][enrollment_no] = {
-                "name": st.text_input("Enter your name", value=profile['name']),
-                "section": st.selectbox("Select your section", ["A", "B", "C"], index=["A", "B", "C"].index(profile['section'])),
-                "elective_1": st.selectbox("Choose one", general_electives_1, index=general_electives_1.index(profile['elective_1'])),
-                "elective_2": st.selectbox("Choose one", general_electives_2, index=general_electives_2.index(profile['elective_2'])),
-                "major_sector": st.selectbox("Choose a sector", list(major_sectors.keys()), index=list(major_sectors.keys()).index(profile['major_sector'])),
-                "additional_subject": st.selectbox("Choose one", additional_subjects, index=additional_subjects.index(profile['additional_subject']))
+    if choice == "Create Profile":
+        st.subheader("Create Profile")
+        name = st.text_input("Enter Name")
+        enrollment = st.text_input("Enter Enrollment Number")
+        section = st.selectbox("Select Section", ["A", "B", "C"])
+        subjects = st.multiselect(
+            "Select Subjects",
+            [
+                "Innovation, Entrepreneurship and Start-ups (IES)",
+                "Know yourself (KY)",
+                "Professional Ethics (PE)",
+                "Bibliophiles (Bibl)",
+                "Psychology in Business (PB-A)",
+                "International Business (IB)",
+                "Project Management (PM)",
+                "E-Business (E.Bus)",
+                "Consumer Behaviour (CB)",
+                "Integrated Marketing Communication (IMC)",
+                "Sales & Distribution Management (S&DM)",
+                "Marketing Analytics (Man)",
+                "Strategic Brand Management (SBM)",
+                "Financial Statement Analysis (FSA)",
+                "Business Valuation (BussV)",
+                "Security and Portfolio Management (SPM)",
+                "International Finance (IF)",
+                "Management of Banks (MoB)",
+                "Programming for Analytics (PA)",
+                "Text Mining and Sentiment Analytics (TM&SA)",
+                "Data Mining and Visualization (DMV)",
+                "Analytics for Service Operations (ASO)",
+                "AI and Machine Learning (AIML)",
+                "Digital Media (DM)",
+                "Media Production and Consumption (MPC)",
+                "Media and Sports Industry (MSI)",
+                "Media Research Tools and Analytics (MRTA)",
+                "Media Cost Management & Control (MCMC)",
+                "Performance Management System (PMS)",
+                "Talent Acquisition (TA)",
+                "Learnings & Development (L&D)",
+                "Compensation & Reward Management (C&RM)",
+                "Purchasing & Inventory Management (P&IM)",
+                "Supply Chain Management (SCM)",
+                "Transportation & Distribution Management (TDM)",
+                "Warehousing & Distribution Facilities Management (W&DFM)"
+            ]
+        )
+        if st.button("Save Profile"):
+            profiles[enrollment] = {
+                "name": name,
+                "section": section,
+                "subjects": subjects
             }
-            st.success("Profile edited successfully!")
+            save_profiles(profiles)
+            st.success("Profile Saved!")
 
-    else:
-        st.info("No profile found for this enrollment number.")
+    elif choice == "Edit Profile":
+        st.subheader("Edit Profile")
+        enrollment = st.selectbox("Select Enrollment Number", list(profiles.keys()))
+        if enrollment:
+            profile = profiles[enrollment]
+            name = st.text_input("Enter Name", profile["name"])
+            section = st.selectbox("Select Section", ["A", "B", "C"], index=["A", "B", "C"].index(profile["section"]))
+            subjects = st.multiselect(
+                "Select Subjects",
+                [
+                    "Innovation, Entrepreneurship and Start-ups (IES)",
+                    "Know yourself (KY)",
+                    "Professional Ethics (PE)",
+                    "Bibliophiles (Bibl)",
+                    "Psychology in Business (PB-A)",
+                    "International Business (IB)",
+                    "Project Management (PM)",
+                    "E-Business (E.Bus)",
+                    "Consumer Behaviour (CB)",
+                    "Integrated Marketing Communication (IMC)",
+                    "Sales & Distribution Management (S&DM)",
+                    "Marketing Analytics (Man)",
+                    "Strategic Brand Management (SBM)",
+                    "Financial Statement Analysis (FSA)",
+                    "Business Valuation (BussV)",
+                    "Security and Portfolio Management (SPM)",
+                    "International Finance (IF)",
+                    "Management of Banks (MoB)",
+                    "Programming for Analytics (PA)",
+                    "Text Mining and Sentiment Analytics (TM&SA)",
+                    "Data Mining and Visualization (DMV)",
+                    "Analytics for Service Operations (ASO)",
+                    "AI and Machine Learning (AIML)",
+                    "Digital Media (DM)",
+                    "Media Production and Consumption (MPC)",
+                    "Media and Sports Industry (MSI)",
+                    "Media Research Tools and Analytics (MRTA)",
+                    "Media Cost Management & Control (MCMC)",
+                    "Performance Management System (PMS)",
+                    "Talent Acquisition (TA)",
+                    "Learnings & Development (L&D)",
+                    "Compensation & Reward Management (C&RM)",
+                    "Purchasing & Inventory Management (P&IM)",
+                    "Supply Chain Management (SCM)",
+                    "Transportation & Distribution Management (TDM)",
+                    "Warehousing & Distribution Facilities Management (W&DFM)"
+                ],
+                default=profile["subjects"]
+            )
+            if st.button("Update Profile"):
+                profiles[enrollment] = {
+                    "name": name,
+                    "section": section,
+                    "subjects": subjects
+                }
+                save_profiles(profiles)
+                st.success("Profile Updated!")
+
+    elif choice == "Delete Profile":
+        st.subheader("Delete Profile")
+        enrollment = st.selectbox("Select Enrollment Number", list(profiles.keys()))
+        if st.button("Delete Profile"):
+            if enrollment in profiles:
+                del profiles[enrollment]
+                save_profiles(profiles)
+                st.success("Profile Deleted!")
+
+if __name__ == "__main__":
+    main()
